@@ -8,7 +8,7 @@ from process_yml import ProcessYml
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    NLLB = "/models/ct2-nllb-200-distilled-1.2B-int8"
+    NLLB = "/models/nllb-200-distilled-600M-int8"
     NLLB_TOKENIZER = "/models/flores200_sacrebleu_tokenizer_spm.model"
 
     parser.add_argument("-path", required=True, type=str)

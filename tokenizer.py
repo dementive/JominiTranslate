@@ -14,7 +14,7 @@ $loc_key_link$
 
 import re
 
-text_icon_re = re.compile(r"@[A-Za-z_0-9][A-Za-z_0-9]*!")
+text_icon_re = re.compile(r"@\[?[^]]*\]?!")
 text_format_re = re.compile(r"#\w+")
 
 
@@ -34,7 +34,7 @@ class LocValue:
         self.tokens.append(self.SPECIAL_TOKEN)
         self.special_tokens.append(value)
 
-    def handle_endl(self, value, start):
+    def handle_endl(self, value):
         newlines = value.split("\\n")
         for i, token in enumerate(newlines):
             if i + 1 == len(newlines):
@@ -79,9 +79,9 @@ class LocValue:
             elif value.endswith("]"):
                 self.handle_special_token(value)
             elif value.startswith("\\n"):
-                self.handle_endl(value, True)
+                self.handle_endl(value)
             elif value.endswith("\\n"):
-                self.handle_endl(value, False)
+                self.handle_endl(value)
             elif "@" in value:
                 self.handle_text_icon(value)
             else:

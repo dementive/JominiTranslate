@@ -11,7 +11,6 @@ from language import NLLBLanguage
 
 class ProcessYml:
     def __init__(self, args):
-        self.map = {}
         try:
             self.source = NLLBLanguage(args.source)
             self.target = NLLBLanguage(args.target)
@@ -37,13 +36,10 @@ class ProcessYml:
             print(f"Directory does not exist: {dir_path}")
             return
 
-        for file_path in glob.glob(os.path.join(dir_path, "**/*.yml"), recursive=True):
-            self.map.update({file_path: self.process_file(file_path)})
-
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
-        self.process_and_translate()
+        self.process_and_translate(dir_path)
 
     def process_file(self, file_path):
         new_map = {}
@@ -73,46 +69,56 @@ class ProcessYml:
                 new_map[key] = LocValue(value, self.SPECIAL_TOKEN)
         return new_map
 
-    def process_and_translate(self):
-        pbar = tqdm.tqdm(self.map)
-        for i in pbar:
-            filename = os.path.splitext(os.path.basename(i))[0]
-            pbar.set_description(f"Translating {filename}")
-            dirpath = (
-                os.path.join(
-                    self.output_dir,
-                    filename.replace(self.source.value, self.target.value),
-                )
-                + ".yml"
-            )
-            with open(dirpath, "w") as file:
-                file.write(f"l_{self.target.value}:\n")
-                for x in self.map[i]:
-                    translations = self.do_translation(self.map[i][x].tokens)
-                    for index, j in enumerate(translations):
-                        new_sentence = str()
-                        for idx, token in enumerate(translations[index].split()):
-                            if (
-                                self.SPECIAL_TOKEN in token
-                                and len(self.map[i][x].special_tokens) > 0
-                            ):
-                                special_token = self.map[i][x].special_tokens.pop(0)
-                                new_sentence += token.replace(
-                                    self.SPECIAL_TOKEN, special_token
-                                )
-                                if idx != len(translations[index].split()) - 1:
-                                    new_sentence += " "
-                            else:
-                                new_sentence += token
-                                if idx != len(translations[index].split()) - 1:
-                                    new_sentence += " "
-                        translations[index] = new_sentence
-                    translated_loc_value = (
-                        f" {x}: \"{' '.join(translations)}\"\n".replace(
-                            f" {self.SPECIAL_TOKEN}", ""
-                        ).replace(" #!", "#!")
+    def process_and_translate(self, dir_path):
+        for file_path in glob.glob(os.path.join(dir_path, "**/*.yml"), recursive=True):
+            file_dict = {file_path: self.process_file(file_path)}
+            for i in file_dict:
+                filename = os.path.splitext(os.path.basename(i))[0]
+                print(f"Processing \033[93m{filename}\033[0m")
+                dirpath = (
+                    os.path.join(
+                        self.output_dir,
+                        filename.replace(self.source.value, self.target.value),
                     )
-                    file.write(translated_loc_value)
+                    + ".yml"
+                )
+                with open(dirpath, "w") as file:
+                    file.write(f"l_{self.target.value}:\n")
+                    total_lines = len(file_dict[i])
+                    pbar = tqdm.tqdm(file_dict[i], total=total_lines)
+                    for line_num, x in enumerate(pbar):
+                        color = "\033[93m" if line_num + 1 < total_lines else "\033[92m"
+                        pbar.set_description(
+                            f"Translating line {color}{line_num+1}\033[0m/{color}{total_lines}\033[0m"
+                        )
+                        translations = self.do_translation(file_dict[i][x].tokens)
+                        for index in range(len(translations)):
+                            new_sentence = str()
+                            for idx, token in enumerate(translations[index].split()):
+                                if (
+                                    self.SPECIAL_TOKEN in token
+                                    and len(file_dict[i][x].special_tokens) > 0
+                                ):
+                                    special_token = file_dict[i][x].special_tokens.pop(
+                                        0
+                                    )
+                                    new_sentence += token.replace(
+                                        self.SPECIAL_TOKEN, special_token
+                                    )
+                                    if idx != len(translations[index].split()) - 1:
+                                        new_sentence += " "
+                                else:
+                                    new_sentence += token
+                                    if idx != len(translations[index].split()) - 1:
+                                        new_sentence += " "
+                            translations[index] = new_sentence
+                        translated_loc_value = (
+                            f" {x}: \"{' '.join(translations)}\"\n".replace(
+                                f" {self.SPECIAL_TOKEN}", ""
+                            ).replace(" #!", "#!")
+                        )
+                        file.write(translated_loc_value)
+                    print()
 
     def do_translation(self, lines):
         # Set language prefixes of the source and target
