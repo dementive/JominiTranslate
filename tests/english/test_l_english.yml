@@ -1,4 +1,4 @@
 ﻿l_english:
 
-  startup_events.2.a:0 "The #G 15#! Zarakens shall Rise. Words $substitution_string$ #G These are more words#! Hello. [sScope.('scope_name').GetName] \n\n Your Mother@loyalty!. Hello"
-  greek_1_11_reward_tt:0 "The appointed admiral will gain #G 15#! Loyalty@loyalty_icon!\nChoice of a naval bonus."
+  startup_events.2.a:0 "@[sScope.('scope_name').GetName]! The #G 15#! Zarakens shall Rise. Words $substitution_string$ #G These are more words#! Hello. [sScope.('scope_name').GetName] \n\n\n\n\n\n\n\n @loyalty!. Hello"
+  greek_1_11_reward_tt:0 "The appointed admiral will gain #G 15#! Loyalty@loyalty_icon! \n \n Choice of a naval bonus. Hello! Hello."
