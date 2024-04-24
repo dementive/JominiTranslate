@@ -6,30 +6,25 @@ import ctranslate2
 import sentencepiece as spm
 
 from tokenizer import *
-from language import NLLBLanguage
 
 
 class ProcessYml:
     def __init__(self, args):
-        try:
-            self.source = NLLBLanguage(args.source)
-            self.target = NLLBLanguage(args.target)
-        except ValueError as e:
-            keys = list(NLLBLanguage._value2member_map_.keys())
-            formatted_keys = "\n".join(
-                [", ".join(keys[i : i + 5]) for i in range(0, len(keys), 5)]
-            )
-            print(f"{e} is not a valid Option. Must be one of:\n{formatted_keys}")
-            exit(1)
+        self.source = args.source
+        self.target = args.target
+        self.translation_model = args.translation_model
+        self.device = args.device
+        self.tokenize_model = args.tokenize_model
         self.SPECIAL_TOKEN = "5_1"
         self.output_dir = f"output/{self.target.value}"
+        self.process_directory(args.path)
+
+    def init_models(self):
         self.translator = ctranslate2.Translator(
-            args.translation_model, device=args.device
+            self.translation_model, device=self.device
         )
         self.sp = spm.SentencePieceProcessor()
-        self.sp.Load(args.tokenize_model)
-
-        self.process_directory(args.path)
+        self.sp.Load(self.tokenize_model)
 
     def process_directory(self, dir_path):
         if not os.path.exists(dir_path):
@@ -70,6 +65,7 @@ class ProcessYml:
         return new_map
 
     def process_and_translate(self, dir_path):
+        self.init_models()
         for file_path in glob.glob(os.path.join(dir_path, "**/*.yml"), recursive=True):
             file_dict = {file_path: self.process_file(file_path)}
             for i in file_dict:

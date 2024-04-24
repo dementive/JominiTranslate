@@ -3,7 +3,9 @@
 
 import os
 import argparse
+
 from process_yml import ProcessYml
+from language import NLLBLanguage
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -20,5 +22,21 @@ if __name__ == "__main__":
         "--tokenize-model", default=f"{os.getcwd()}{NLLB_TOKENIZER}", type=str
     )
     args = parser.parse_args()
+
+    try:
+        args.source = NLLBLanguage(args.source)
+        args.target = NLLBLanguage(args.target)
+    except ValueError as e:
+        keys = list(NLLBLanguage._value2member_map_.keys())
+        formatted_keys = "\n".join(
+            [", ".join(keys[i : i + 5]) for i in range(0, len(keys), 5)]
+        )
+        print(f"{e} is not a valid option. Must be one of:\n{formatted_keys}")
+        exit(1)
+
+    # NEW ARGS:
+    # --beam-size: Can be either "1", "4".
+    # 1 does "Greedy search is the most basic and fastest decoding strategy. It simply takes the token that has the highest probability at each timestep."
+    # 4 does "Beam search is a common decoding strategy for sequence models. The algorithm keeps N hypotheses at all times. This negatively impacts decoding speed and memory but allows finding a better final hypothesis."
 
     ProcessYml(args)
