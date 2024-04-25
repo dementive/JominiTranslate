@@ -12,23 +12,29 @@ $loc_key_link$
 #!
 """
 
-import re
-
-text_icon_re = re.compile(r"@\[?[^]]*\]?!")
-text_format_re = re.compile(r"#\w+")
+from collections import deque
 
 
 class LocValue:
     def __init__(self, str, special_token):
-        self.tokens = []
-        self.special_tokens = []
+        self.tokens = deque()
+        self.special_tokens = deque()
         self.SPECIAL_TOKEN = special_token
         self.tokenize_value(str)
 
     def handle_end_formatting(self, value):
-        self.tokens.append(value.replace("#!", ""))
-        self.tokens.append(self.SPECIAL_TOKEN)
-        self.special_tokens.append("#!")
+        idx = value.index("#!")
+        first_part = value[:idx]
+
+        if "]" in first_part:
+            self.tokens.append(self.SPECIAL_TOKEN)
+            self.tokens.append(self.SPECIAL_TOKEN)
+            self.special_tokens.append(first_part)
+            self.special_tokens.append("#!")
+        else:
+            self.tokens.append(value.replace("#!", ""))
+            self.tokens.append(self.SPECIAL_TOKEN)
+            self.special_tokens.append("#!")
 
     def handle_special_token(self, value):
         self.tokens.append(self.SPECIAL_TOKEN)
@@ -47,32 +53,32 @@ class LocValue:
                 self.tokens.append(token)
 
     def handle_text_icon(self, value):
-        self.special_tokens.extend(re.findall(text_icon_re, value))
-        svalue = re.sub(text_icon_re, self.SPECIAL_TOKEN, value)
-        pattern = rf"({self.SPECIAL_TOKEN}|\\n|\s|\\t)"
-        parts = re.split(pattern, svalue)
-        # Filter out empty strings from the result
-        parts = [part for part in parts if part]
-        for i in parts:
-            if i in ("\\n", "\\t"):
+        for i in value.split("@"):
+            if i.endswith("!"):
+                self.special_tokens.append(f"@{i}")
                 self.tokens.append(self.SPECIAL_TOKEN)
-                self.special_tokens.append(i)
+            elif "!" in i:
+                idx = i.index("!") + 1
+                first_part, second_part = i[:idx], i[idx:]
+                self.special_tokens.append(f"@{first_part}")
+                self.tokens.append(self.SPECIAL_TOKEN)
+                self.tokens.append(second_part)
             else:
                 self.tokens.append(i)
 
     def handle_text_formatting(self, value):
-        match = re.match(text_format_re, value)
-        if match:
-            matched_value = match.group()
+        if value.startswith("#") and value.endswith("#"):
             self.tokens.append(self.SPECIAL_TOKEN)
-            self.special_tokens.append(matched_value)
+            self.special_tokens.append(value)
 
     def tokenize_value(self, value: str):
         split_values = value.split()
         for value in split_values:
-            if value.endswith("#!"):
+            if all(c not in value for c in "#$]\\n@"):
+                self.tokens.append(value)
+            elif value.endswith("#!"):
                 self.handle_end_formatting(value)
-            elif re.search(text_format_re, value):
+            elif value.startswith("#") and value.endswith("#"):
                 self.handle_text_formatting(value)
             elif value.endswith("$"):
                 self.handle_special_token(value)

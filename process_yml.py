@@ -40,18 +40,15 @@ class ProcessYml:
         new_map = {}
         with open(file_path, "r") as file:
             for line in file:
-                # Find the position of the colon
                 colon_pos = line.find(":")
-                if colon_pos == -1:  # Skip lines without a colon
+                if colon_pos == -1:
                     continue
 
-                # Extract the key and value
                 key = line[:colon_pos].strip()
                 if key.startswith("#"):
-                    continue  # skip comments
+                    continue
                 value = line[colon_pos + 1 :].strip()
 
-                # Find the first and last quote in the value
                 first_quote = value.find('"')
                 last_quote = value.rfind('"')
                 if first_quote != -1 and last_quote != -1 and first_quote != last_quote:
@@ -60,7 +57,6 @@ class ProcessYml:
                     # If there are no quotes or only one quote, skip this line
                     continue
 
-                # Store the key-value pair in the map
                 new_map[key] = LocValue(value, self.SPECIAL_TOKEN)
         return new_map
 
@@ -88,48 +84,44 @@ class ProcessYml:
                             f"Translating line {color}{line_num+1}\033[0m/{color}{total_lines}\033[0m"
                         )
                         translations = self.do_translation(file_dict[i][x].tokens)
-                        for index in range(len(translations)):
-                            new_sentence = str()
-                            for idx, token in enumerate(translations[index].split()):
-                                if (
-                                    self.SPECIAL_TOKEN in token
-                                    and len(file_dict[i][x].special_tokens) > 0
-                                ):
-                                    special_token = file_dict[i][x].special_tokens.pop(
-                                        0
-                                    )
-                                    new_sentence += token.replace(
-                                        self.SPECIAL_TOKEN, special_token
-                                    )
-                                    if idx != len(translations[index].split()) - 1:
-                                        new_sentence += " "
-                                else:
-                                    new_sentence += token
-                                    if idx != len(translations[index].split()) - 1:
-                                        new_sentence += " "
-                            translations[index] = new_sentence
-                        translated_loc_value = (
-                            f" {x}: \"{' '.join(translations)}\"\n".replace(
-                                f" {self.SPECIAL_TOKEN}", ""
-                            ).replace(" #!", "#!")
+                        file.write(
+                            self.post_process_translations(
+                                translations, file_dict[i][x], x
+                            )
                         )
-                        file.write(translated_loc_value)
                     print()
+
+    def post_process_translations(self, translations, loc_value, x):
+        for index in range(len(translations)):
+            new_sentence = str()
+            for idx, token in enumerate(translations[index].split()):
+                if self.SPECIAL_TOKEN in token and len(loc_value.special_tokens) > 0:
+                    special_token = loc_value.special_tokens.popleft()
+                    new_sentence += token.replace(self.SPECIAL_TOKEN, special_token)
+                    if idx != len(translations[index].split()) - 1:
+                        new_sentence += " "
+                else:
+                    new_sentence += token
+                    if idx != len(translations[index].split()) - 1:
+                        new_sentence += " "
+            translations[index] = new_sentence
+        translated_loc_value = f" {x}: \"{' '.join(translations)}\"\n".replace(
+            f" {self.SPECIAL_TOKEN}", ""
+        ).replace(" #!", "#!")
+
+        return translated_loc_value
 
     def do_translation(self, lines):
         # Set language prefixes of the source and target
-        lines = " ".join(lines)
-        lines = [lines]
-        src_lang = f"{self.source.name}"
-        target_lang = f"{self.target.name}"
+        lines = [" ".join(lines)]
 
         source_sents = [line.strip() for line in lines]
-        target_prefix = [[target_lang]] * len(source_sents)
+        target_prefix = [[self.target.name]] * len(source_sents)
 
         # Subword the source sentences
         source_sents_subworded = self.sp.EncodeAsPieces(source_sents)
         source_sents_subworded = [
-            [src_lang] + sent + ["</s>"] for sent in source_sents_subworded
+            [self.source.name] + sent + ["</s>"] for sent in source_sents_subworded
         ]
 
         # Translate the source sentences
@@ -143,8 +135,8 @@ class ProcessYml:
         # Desubword the target sentences
         translations = [translation.hypotheses[0] for translation in translations]
         for translation in translations:
-            if target_lang in translation:
-                translation.remove(target_lang)
+            if self.target.name in translation:
+                translation.remove(self.target.name)
         translations_desubword = self.sp.Decode(translations)
 
         return translations_desubword
