@@ -41,7 +41,10 @@ class LocValue:
                 ):
                     self.current_token_type = TokenType(1)
                     self.add_token(char)
-                elif self.current_token_type.name == "start_formatting":
+                elif (
+                    self.current_token_type.name == "start_formatting"
+                    and next_char == " "
+                ):
                     self.add_token(char)
                 elif char == "!" and (
                     self.current_token_type.name == "end_formatting"
