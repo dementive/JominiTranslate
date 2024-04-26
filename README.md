@@ -13,7 +13,7 @@ For more info on the difference between the models read here https://forum.openn
 
 # Usage
 
-`python jomini-translate -path "./tests/english" -source english -target spanish`
+`python jomini-translate.py -path "./tests/english" -source english -target spanish`
 
 ## CLI Arguments
 
