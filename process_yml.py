@@ -1,7 +1,7 @@
 import os
 import glob
-import tqdm
 
+import tqdm
 import ctranslate2
 import sentencepiece as spm
 
@@ -15,7 +15,7 @@ class ProcessYml:
         self.translation_model = args.translation_model
         self.device = args.device
         self.tokenize_model = args.tokenize_model
-        self.SPECIAL_TOKEN = "5_1"
+        self.SPECIAL_TOKEN = "5_1"  # This doens't work perfectly for all languages and is particuarly bad for chinese, should try to find a better way to ignore these tokens...
         self.output_dir = f"output/{self.target.value}"
         self.process_directory(args.path)
 
@@ -57,7 +57,10 @@ class ProcessYml:
                     # If there are no quotes or only one quote, skip this line
                     continue
 
-                new_map[key] = LocValue(value, self.SPECIAL_TOKEN)
+                if key and not value:
+                    new_map[key] = LocValue(self.SPECIAL_TOKEN)
+                else:
+                    new_map[key] = LocValue(self.SPECIAL_TOKEN, value)
         return new_map
 
     def process_and_translate(self, dir_path):
@@ -83,12 +86,16 @@ class ProcessYml:
                         pbar.set_description(
                             f"Translating line {color}{line_num+1}\033[0m/{color}{total_lines}\033[0m"
                         )
-                        translations = self.do_translation(file_dict[i][x].tokens)
-                        file.write(
-                            self.post_process_translations(
-                                translations, file_dict[i][x], x
+                        tokens = file_dict[i][x].tokens
+                        if len(tokens) != 0:
+                            translations = self.do_translation(tokens)
+                            file.write(
+                                self.post_process_translations(
+                                    translations, file_dict[i][x], x
+                                )
                             )
-                        )
+                        else:
+                            file.write(f' {x}: ""\n')
                     print()
 
     def post_process_translations(self, translations, loc_value, x):

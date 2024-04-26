@@ -13,82 +13,106 @@ $loc_key_link$
 """
 
 from collections import deque
+from enum import Enum
 
 
 class LocValue:
-    def __init__(self, str, special_token):
+    def __init__(self, special_token: str, value=""):
         self.tokens = deque()
         self.special_tokens = deque()
         self.SPECIAL_TOKEN = special_token
-        self.tokenize_value(str)
-
-    def handle_end_formatting(self, value):
-        idx = value.index("#!")
-        first_part = value[:idx]
-
-        if "]" in first_part:
-            self.tokens.append(self.SPECIAL_TOKEN)
-            self.tokens.append(self.SPECIAL_TOKEN)
-            self.special_tokens.append(first_part)
-            self.special_tokens.append("#!")
-        else:
-            self.tokens.append(value.replace("#!", ""))
-            self.tokens.append(self.SPECIAL_TOKEN)
-            self.special_tokens.append("#!")
-
-    def handle_special_token(self, value):
-        self.tokens.append(self.SPECIAL_TOKEN)
-        self.special_tokens.append(value)
-
-    def handle_endl(self, value):
-        newlines = value.split("\\n")
-        for i, token in enumerate(newlines):
-            if i + 1 == len(newlines):
-                break
-            if token == "":
-                token = "\\n"
-                self.special_tokens.append("\\n")
-                self.tokens.append(self.SPECIAL_TOKEN)
-            else:
-                self.tokens.append(token)
-
-    def handle_text_icon(self, value):
-        for i in value.split("@"):
-            if i.endswith("!"):
-                self.special_tokens.append(f"@{i}")
-                self.tokens.append(self.SPECIAL_TOKEN)
-            elif "!" in i:
-                idx = i.index("!") + 1
-                first_part, second_part = i[:idx], i[idx:]
-                self.special_tokens.append(f"@{first_part}")
-                self.tokens.append(self.SPECIAL_TOKEN)
-                self.tokens.append(second_part)
-            else:
-                self.tokens.append(i)
-
-    def handle_text_formatting(self, value):
-        if value.startswith("#") and value.endswith("#"):
-            self.tokens.append(self.SPECIAL_TOKEN)
-            self.special_tokens.append(value)
+        self.current_token_type = TokenType(1)
+        self.current_token = ""
+        if value:
+            self.tokenize_value(value)
 
     def tokenize_value(self, value: str):
-        split_values = value.split()
-        for value in split_values:
-            if all(c not in value for c in "#$]\\n@"):
-                self.tokens.append(value)
-            elif value.endswith("#!"):
-                self.handle_end_formatting(value)
-            elif value.startswith("#") and value.endswith("#"):
-                self.handle_text_formatting(value)
-            elif value.endswith("$"):
-                self.handle_special_token(value)
-            elif value.endswith("]"):
-                self.handle_special_token(value)
-            elif value.startswith("\\n"):
-                self.handle_endl(value)
-            elif value.endswith("\\n"):
-                self.handle_endl(value)
-            elif "@" in value:
-                self.handle_text_icon(value)
-            else:
-                self.tokens.append(value)
+        for i, char in enumerate(value):
+            is_last_char = True if len(value) == i + 1 else False
+            next_char = "" if is_last_char else value[i + 1]
+            if is_last_char or (
+                char == " " and self.current_token_type.name == "normal_string"
+            ):
+                self.add_token(char)
+            if char not in ("#", "$", "]", "[", "\\", "@"):
+                if (
+                    next_char in ("#", "$", "]", "[", "\\", "@")
+                    and self.current_token_type.name == "normal_string"
+                ):
+                    self.current_token_type = TokenType(1)
+                    self.add_token(char)
+                elif self.current_token_type.name == "start_formatting":
+                    self.add_token(char)
+                elif char == "!" and (
+                    self.current_token_type.name == "end_formatting"
+                    or self.current_token_type.name == "text_icon"
+                ):
+                    self.add_token(char)
+                elif char == "n" and self.current_token_type.name == "newline_char":
+                    self.add_token(char)
+                elif char == "t" and self.current_token_type.name == "tab_char":
+                    self.add_token(char)
+                else:
+                    self.current_token += char
+            elif char == "#":
+                if next_char == "!":
+                    self.current_token_type = TokenType(2)
+                elif next_char.isalpha():
+                    self.current_token_type = TokenType(3)
+                self.current_token += char
+            elif char == "$":
+                if self.current_token_type.name == "loc_key_link":
+                    self.add_token(char)
+                elif next_char:
+                    self.current_token_type = TokenType(4)
+                    self.current_token += char
+            elif char == "[":
+                self.current_token += char
+                if not self.current_token_type.name == "text_icon":
+                    self.current_token_type = TokenType(5)
+            elif char == "]":
+                if self.current_token_type.name == "data_function":
+                    self.add_token(char)
+                else:
+                    self.current_token += char
+            elif char == "@":
+                if next_char:
+                    self.current_token_type = TokenType(6)
+                self.current_token += char
+            elif char == "\\" and next_char == "n":
+                self.current_token += char
+                self.current_token_type = TokenType(7)
+            elif char == "\\" and next_char == "t":
+                self.current_token += char
+                self.current_token_type = TokenType(8)
+
+        if self.tokens[-1] == self.SPECIAL_TOKEN:
+            self.tokens.append(".")
+
+    def add_token(self, char):
+        self.current_token += char
+        self.current_token = self.current_token.strip()
+        if not self.current_token:
+            self.current_token_type = TokenType(1)
+            self.current_token = ""
+            return
+
+        if self.current_token_type.name == "normal_string":
+            self.tokens.append(self.current_token)
+        else:
+            self.special_tokens.append(self.current_token)
+            self.tokens.append(self.SPECIAL_TOKEN)
+
+        self.current_token_type = TokenType(1)
+        self.current_token = ""
+
+
+class TokenType(Enum):
+    normal_string = 1
+    end_formatting = 2
+    start_formatting = 3
+    loc_key_link = 4
+    data_function = 5
+    text_icon = 6
+    newline_char = 7
+    tab_char = 8
