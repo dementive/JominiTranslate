@@ -1,6 +1,6 @@
 # jomini-translate
 
-Jomini Translate is a cli program that runs a [NLLB-200](https://forum.opennmt.net/t/nllb-200-with-ctranslate2/5090) language translation model with [CTranslate2](https://github.com/OpenNMT/CTranslate2) to translate all the localization files in mods for any paradox game in any language to one of 200 other languages supported by the NLLB-200 model. All translation is done offline locally on your computer by the model so you don't need to deal with rate limits or other limitations like you would with most translation services.
+Jomini Translate is a cli program that runs a [NLLB-200](https://github.com/facebookresearch/fairseq/tree/nllb) language translation model with [CTranslate2](https://github.com/OpenNMT/CTranslate2) to translate all the localization files in mods for mods paradox games (EU4, Crusader Kings 3, Victoria 3, Imperator Rome, etc...) to one of 200 other languages supported by the NLLB-200 model. All translation is done offline locally on your computer by the model so you don't have rate limits or other limitations like you would with most translation services.
 
 # Setup
 
@@ -41,7 +41,7 @@ For more info on the difference between the models read here https://forum.openn
 - **Description**: Can be either `"1"` or `"4"`.
  - `1` performs a Greedy search, which is the most basic and fastest decoding strategy. It simply takes the token with the highest probability at each timestep.
  - `4` uses Beam search, a common decoding strategy for sequence models. The algorithm keeps N hypotheses at all times, which negatively impacts decoding speed and memory but allows finding a better final hypothesis.
- - **Default**: `cpu`
+ - **Default**: 1
 
 
 ### `--translation-model`
