@@ -6,7 +6,7 @@ Jomini Translate is a cli program that runs a [NLLB-200](https://github.com/face
 
 To start you will need to have python version 3.11 or greater installed and then run `pip install -r requirements.txt` to install all of the python dependencies.
 
-Next run the init script (init on linux, init.ps1 on windows). This will download the NLLB model and unzip to the models folder.
+Next run the init script. This will download the NLLB model and unzip to the models folder. If you are on windows just open up the script and open the URL's in your browser.
 
 By default the script will install NLLB-200-1.2B, there are a few other NLLB versions that may be better for you depending on your use case to download these just uncomment the part of the script you need.
 For more info on the difference between the models read here https://forum.opennmt.net/t/nllb-200-with-ctranslate2/5090/3
@@ -33,13 +33,14 @@ For more info on the difference between the models read here https://forum.openn
 - **Required**: Yes
 
 ### `-device`
-- **Description**: Sets the device for translation. `cuda` will run the translation on the GPU if you have a GPU that supports it and CUDA 12.0+ is installed.
+- **Description**: Sets the device for translation. `cuda` will run the translation on the GPU if you have a GPU that supports it and [CUDA 12.0+ is installed](https://developer.nvidia.com/cuda-downloads).
 - **Example**: `cuda/cpu`
 - **Default**: `cpu`
+- 
 
 ### `--beam-size`
 - **Description**: Can be either `"1"` or `"4"`.
- - `1` performs a Greedy search, which is the most basic and fastest decoding strategy. It simply takes the token with the highest probability at each timestep.
+ - `1` performs a Greedy search, which is the most basic and fastest decoding strategy. It simply takes the token with the highest probability at each time step.
  - `4` uses Beam search, a common decoding strategy for sequence models. The algorithm keeps N hypotheses at all times, which negatively impacts decoding speed and memory but allows finding a better final hypothesis.
  - **Default**: 1
 
@@ -60,3 +61,8 @@ The hardware you are using, the `-device` argument, the `--beam-size` argument, 
 To maximize the translation speed use the NLLB-200-600M model, it translates about twice as fast as the other models but has lower translation quality. Also use the `cuda` device option to run translations on the GPU and set the `--beam-size` argument to 1.
 
 To maximize translation quality at the expense of speed use the NLLB-200-3.3B model (or newer compatible NLLB model) and set the `--beam-size` argument to 4.
+
+
+## Limitations
+
+Translating localization keys for paradox game's is tricky because they have a lot of special syntax (data functions, text formatting, etc..) that doesn't need to get translated and also needs to stay in the same position it was found in in the original text. To get around this the program removes all the special syntax and inserts a special character before translation so the special token position will not get translated and will stay in the same position to preserve the sentence structure. This special character needs to be something with some meaning to the translation model so it doesn't completely ignore it in the output, the special character I found that worked is `5_1` I tested a lot of different one's this seems to work the best somehow. I've tested and this works perfectly for all latin based languages (english, spanish, german, etc...) but unfortunately this approach doesn't always work perfectly for languages with other character sets (japanese, chinese, etc...) because for some languages the model will occasionally ignore the special character and mess up the translation. I'm sure there is a way around this to make it work for all languages while also preserving all the special syntax in the correct position but I have yet to find it...

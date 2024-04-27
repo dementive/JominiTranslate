@@ -77,26 +77,23 @@ class ProcessYml:
                     )
                     + ".yml"
                 )
+                lines = deque([f"l_{self.target.value}:\n"])
+                total_lines = len(file_dict[i])
+                pbar = tqdm.tqdm(file_dict[i], total=total_lines)
+                for line_num, x in enumerate(pbar):
+                    color = "\033[93m" if line_num + 1 < total_lines else "\033[92m"
+                    pbar.set_description(
+                        f"Translating line {color}{line_num+1}\033[0m/{color}{total_lines}\033[0m"
+                    )
+                    tokens = file_dict[i][x].tokens
+                    if len(tokens) != 0:
+                        translations = self.do_translation(tokens)
+                        lines.append(self.post_process_translations(translations, file_dict[i][x], x))
+                    else:
+                        lines.append(f' {x}: ""\n')
                 with open(dirpath, "w") as file:
-                    file.write(f"l_{self.target.value}:\n")
-                    total_lines = len(file_dict[i])
-                    pbar = tqdm.tqdm(file_dict[i], total=total_lines)
-                    for line_num, x in enumerate(pbar):
-                        color = "\033[93m" if line_num + 1 < total_lines else "\033[92m"
-                        pbar.set_description(
-                            f"Translating line {color}{line_num+1}\033[0m/{color}{total_lines}\033[0m"
-                        )
-                        tokens = file_dict[i][x].tokens
-                        if len(tokens) != 0:
-                            translations = self.do_translation(tokens)
-                            file.write(
-                                self.post_process_translations(
-                                    translations, file_dict[i][x], x
-                                )
-                            )
-                        else:
-                            file.write(f' {x}: ""\n')
-                    print()
+                    file.writelines(lines)
+                print()
 
     def post_process_translations(self, translations, loc_value, x):
         for index in range(len(translations)):

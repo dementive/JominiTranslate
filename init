@@ -19,4 +19,4 @@ rm models/nllb-200_600M_int8_ct2.zip
 # rm models/nllb-200_3.3B_int8_ct2.zip
 
 # Tokenizer model
-# wget -P models/ https://pretrained-nmt-models.s3.us-west-004.backblazeb2.com/CTranslate2/nllb/flores200_sacrebleu_tokenizer_spm.model
+wget -P models/ https://pretrained-nmt-models.s3.us-west-004.backblazeb2.com/CTranslate2/nllb/flores200_sacrebleu_tokenizer_spm.model
