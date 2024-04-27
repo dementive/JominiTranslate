@@ -91,7 +91,7 @@ class ProcessYml:
                         lines.append(self.post_process_translations(translations, file_dict[i][x], x))
                     else:
                         lines.append(f' {x}: ""\n')
-                with open(dirpath, "w") as file:
+                with open(dirpath, "w", encoding="utf-8-sig") as file:
                     file.writelines(lines)
                 print()
 
@@ -133,6 +133,8 @@ class ProcessYml:
             source_sents_subworded,
             batch_type="tokens",
             beam_size=1,
+            no_repeat_ngram_size=25,
+            disable_unk=True,
             target_prefix=target_prefix,
         )
 
