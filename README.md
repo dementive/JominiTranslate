@@ -36,7 +36,6 @@ For more info on the difference between the models read here https://forum.openn
 - **Description**: Sets the device for translation. `cuda` will run the translation on the GPU if you have a GPU that supports it and [CUDA 12.0+ is installed](https://developer.nvidia.com/cuda-downloads).
 - **Example**: `cuda/cpu`
 - **Default**: `cpu`
-- 
 
 ### `--beam-size`
 - **Description**: Changes the behavior of the translation mode, can be either `"1"` or `"4"`.
