@@ -1,18 +1,26 @@
 # Uses NLLB-200 models converted to the CTranslate2 format
 # Translates a full localization folder for any Paradox game to any other language supported by the NLLB-200 model used
 
+import sys
 import os
 import argparse
 
+import customtkinter
+
+from gui import App
 from process_yml import ProcessYml
-from language import NLLBLanguage
 
-if __name__ == "__main__":
+NLLB = "/models/nllb-200_600M_int8_ct2"
+NLLB_TOKENIZER = "/models/flores200_sacrebleu_tokenizer_spm.model"
+
+customtkinter.set_appearance_mode("dark")
+
+def gui_app():
+    application = App()
+    application.mainloop()
+
+def cli_app():
     parser = argparse.ArgumentParser()
-
-    NLLB = "/models/ct2-nllb-200-distilled-1.2B-int8"
-    NLLB_TOKENIZER = "/models/flores200_sacrebleu_tokenizer_spm.model"
-
     parser.add_argument("-path", required=True, type=str)
     parser.add_argument("-source", required=True, type=str)
     parser.add_argument("-target", required=True, type=str)
@@ -22,17 +30,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tokenize-model", default=f"{os.getcwd()}{NLLB_TOKENIZER}", type=str
     )
+    
     args = parser.parse_args()
-
-    try:
-        args.source = NLLBLanguage(args.source)
-        args.target = NLLBLanguage(args.target)
-    except ValueError as e:
-        keys = list(NLLBLanguage._value2member_map_.keys())
-        formatted_keys = "\n".join(
-            [", ".join(keys[i : i + 5]) for i in range(0, len(keys), 5)]
-        )
-        print(f"{e} is not a valid option. Must be one of:\n{formatted_keys}")
-        exit(1)
-
     ProcessYml(args)
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        cli_app()
+    else:
+        gui_app()

@@ -1,6 +1,6 @@
 # jomini-translate
 
-Jomini Translate is a cli program that runs a [NLLB-200](https://github.com/facebookresearch/fairseq/tree/nllb) language translation model with [CTranslate2](https://github.com/OpenNMT/CTranslate2) to translate all the localization files in mods for mods paradox games (EU4, Crusader Kings 3, Victoria 3, Imperator Rome, etc...) to one of 200 other languages supported by the NLLB-200 model. All translation is done offline locally on your computer by the model so you don't have rate limits or other limitations like you would with most translation services.
+Jomini Translate is a command line and gui program that runs a [NLLB-200](https://github.com/facebookresearch/fairseq/tree/nllb) language translation model with [CTranslate2](https://github.com/OpenNMT/CTranslate2) to translate all the localization files in mods for mods paradox games (EU4, Crusader Kings 3, Victoria 3, Imperator Rome, etc...) to one of 200 other languages supported by the NLLB-200 model. All translation is done offline locally on your computer by the model so you don't have rate limits or other limitations like you would with most translation services.
 
 # Setup
 
@@ -13,7 +13,8 @@ For more info on the difference between the models read here https://forum.openn
 
 # Usage
 
-`python jomini-translate.py -path "./tests/english" -source english -target spanish`
+To use the command line program run `python jomini-translate.py -path "./tests/english" -source english -target spanish`
+To use the gui just click on the python file or run `python jomini-translate.py`
 
 ## CLI Arguments
 

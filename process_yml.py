@@ -5,13 +5,22 @@ import tqdm
 import ctranslate2
 import sentencepiece as spm
 
+from language import NLLBLanguage
 from tokenizer import *
 
 
 class ProcessYml:
     def __init__(self, args):
-        self.source = args.source
-        self.target = args.target
+        try:
+            self.source = args.source = NLLBLanguage(args.source)
+            self.target = args.target = NLLBLanguage(args.target)
+        except ValueError as e:
+            keys = list(NLLBLanguage._value2member_map_.keys())
+            formatted_keys = "\n".join(
+                [", ".join(keys[i : i + 5]) for i in range(0, len(keys), 5)]
+            )
+            print(f"{e} is not a valid option. Must be one of:\n{formatted_keys}")
+            exit(1)
         self.translation_model = args.translation_model
         self.device = args.device
         self.tokenize_model = args.tokenize_model
