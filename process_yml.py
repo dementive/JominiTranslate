@@ -24,7 +24,6 @@ class ProcessYml:
         self.translation_model = args.translation_model
         self.device = args.device
         self.tokenize_model = args.tokenize_model
-        self.SPECIAL_TOKEN = "5_1"  # This doens't work perfectly for all languages and is particuarly bad for chinese, should try to find a better way to ignore these tokens...
         self.output_dir = f"output/{self.target.value}"
         self.process_directory(args.path)
 
@@ -67,9 +66,9 @@ class ProcessYml:
                     continue
 
                 if key and not value:
-                    new_map[key] = LocValue(self.SPECIAL_TOKEN)
+                    new_map[key] = LocValue()
                 else:
-                    new_map[key] = LocValue(self.SPECIAL_TOKEN, value)
+                    new_map[key] = LocValue(value)
         return new_map
 
     def process_and_translate(self, dir_path):
@@ -94,41 +93,30 @@ class ProcessYml:
                     pbar.set_description(
                         f"Translating line {color}{line_num+1}\033[0m/{color}{total_lines}\033[0m"
                     )
-                    tokens = file_dict[i][x].tokens
-                    if len(tokens) != 0:
-                        translations = self.do_translation(tokens)
-                        lines.append(self.post_process_translations(translations, file_dict[i][x], x))
+                    translated_tokens = deque()
+                    for index, token_deque in enumerate(file_dict[i][x].tokens):
+                        translations = self.do_translation(token_deque)
+                        translated_tokens.append(self.post_process_translations_new(translations, file_dict[i][x].special_tokens, index))
+                    if len(translated_tokens) != 0:
+                        lines.append(f' {x}: "{" ".join(translated_tokens)}"\n')
                     else:
                         lines.append(f' {x}: ""\n')
                 with open(dirpath, "w", encoding="utf-8-sig") as file:
                     file.writelines(lines)
                 print()
 
-    def post_process_translations(self, translations, loc_value, x):
-        for index in range(len(translations)):
-            new_sentence = str()
-            for idx, token in enumerate(translations[index].split()):
-                if self.SPECIAL_TOKEN in token and len(loc_value.special_tokens) > 0:
-                    special_token = loc_value.special_tokens.popleft()
-                    new_sentence += token.replace(self.SPECIAL_TOKEN, special_token)
-                    if idx != len(translations[index].split()) - 1:
-                        new_sentence += " "
-                else:
-                    new_sentence += token
-                    if idx != len(translations[index].split()) - 1:
-                        new_sentence += " "
-            translations[index] = new_sentence
-        translated_loc_value = f" {x}: \"{' '.join(translations)}\"\n".replace(
-            f" {self.SPECIAL_TOKEN}", ""
-        ).replace(" #!", "#!")
 
-        return translated_loc_value
+    def post_process_translations_new(self, translations, special_tokens, index):
+        if index in special_tokens:
+            for i in special_tokens[index]:
+                translations.append(i)
+
+        translations = " ".join(translations)
+        return translations.replace(" #!", "#!")
 
     def do_translation(self, lines):
         # Set language prefixes of the source and target
-        lines = [" ".join(lines)]
-
-        source_sents = [line.strip() for line in lines]
+        source_sents = [lines]
         target_prefix = [[self.target.name]] * len(source_sents)
 
         # Subword the source sentences

@@ -1,9 +1,20 @@
 ﻿l_english:
 
-  startup_events.2.a:0 "@[sScope.('scope_name').GetName]! The #G 15#! Zarakens shall Rise. Words $substitution_string$ #G These are more words#! Hello. [sScope.('scope_name').GetName] \n\n\n\n\n\n\n\n @loyalty!. Hello"
-  greek_1_11_reward_tt:0 "The appointed admiral will gain #G 15#! Loyalty@loyalty_icon! \n \n Choice of a naval bonus. Hello! Hello."
+  #startup_events.2.a:0 "@[sScope.('scope_name').GetName]! The #G 15#! Zarakens shall Rise. Words $substitution_string$ #G These are more words#! Hello. [sScope.('scope_name').GetName] \n\n\n\n\n\n\n\n @loyalty!. Hello"
+  #greek_1_11_reward_tt:0 "The appointed admiral will gain #G 15#! Loyalty@loyalty_icon! \n \n Choice of a naval bonus. Hello! Hello."
 
-  epic_test_key:0 "@[sScope.('scope_name').GetName]!#G words#!\n\n\t\t$sub_string$@icon![function.GetName]"
-  empty_key:0 ""
+  #epic_test_key:0 "@[sScope.('scope_name').GetName]!#G words#!\n\n\t\t$sub_string$@icon![function.GetName]"
+  #empty_key:0 ""
+  #test:0 "Hello [test_function.GetName] therDe"
 
+  arseka_01_task_8:0 "Centralize the Coinage"
   arseka_01_task_8_DESC:0 "As the pioneering city where #E Iberians #! first embraced the art of #E minting coins #!, [ROOT.GetCountry.GetCapital.GetName] has long held a prestigious reputation as a pillar of civilization in a sea of barbarism. However, to ensure sustained growth and attract new traders, it is essential to bring order to our coinage. Establishing a #T Central Coin Mint #! and codifying our system of taxation will solidify [ROOT.GetCountry.GetName]'s standing as a reliable and prosperous trading hub in the region."
+  arseka_01_task_8_tt:0 "A #T Central Coin Mint #! will be established in #Y #E [GetProvince('(int32)1029').GetName] #! #!\n#Y This will start an event chain. #!"
+
+  arseka_01_task_9:0 "Casting in Copper"
+  arseka_01_task_9_DESC:0 "With the #T Central Coin Mint #! now established, the next crucial step is to commence the production of coins. Historically, [ROOT.GetCountry.GetAdjective]s minted almost exclusively in #E silver #!@precious_metals! during this period; however, we currently lack access to sufficient quantities of #E silver #!@precious_metals! for minting. To kickstart the minting process and ensure a steady coin supply, efforts must be directed towards #E securing copper #!@base_metals! for smelting."
+  arseka_01_task_9_tt:0 "#Y This will start an event chain. #!"
+
+  arseka_01_task_10:0 "Mastian Silver"
+  arseka_01_task_10_DESC:0 "Various influential parties within [ROOT.GetCountry.GetName] are fervently agitating for the acquisition of #E Mastia #!. The reason behind this growing clamor is the presence of #E rich silver deposits #! rumored to be nestled in the heart of #E Mastia #!. These silver mines hold the promise of providing the #Y Precious Metals #!@precious_metals! necessary for minting coins of elevated value and prestige."
+  arseka_01_task_10_tt:0 "#Y This will start an event chain. #!"

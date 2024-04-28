@@ -10,7 +10,7 @@ import customtkinter
 from gui import App
 from process_yml import ProcessYml
 
-NLLB = "/models/nllb-200_600M_int8_ct2"
+NLLB = "/models/ct2-nllb-200-distilled-1.2B-int8"
 NLLB_TOKENIZER = "/models/flores200_sacrebleu_tokenizer_spm.model"
 
 customtkinter.set_appearance_mode("dark")

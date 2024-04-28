@@ -17,16 +17,18 @@ from enum import Enum
 
 
 class LocValue:
-    def __init__(self, special_token: str, value=""):
+    def __init__(self, value=""):
         self.tokens = deque()
-        self.special_tokens = deque()
-        self.SPECIAL_TOKEN = special_token
+        self.special_tokens = dict()
         self.current_token_type = TokenType(1)
         self.current_token = ""
+        self.tokens_deque = deque()
         if value:
             self.tokenize_value(value)
 
     def tokenize_value(self, value: str):
+        is_last_char = False
+        special_tokens = ("#", "$", "]", "[", "\\", "@")
         for i, char in enumerate(value):
             is_last_char = True if len(value) == i + 1 else False
             next_char = "" if is_last_char else value[i + 1]
@@ -34,9 +36,9 @@ class LocValue:
                 char == " " and self.current_token_type.name == "normal_string"
             ):
                 self.add_token(char)
-            if char not in ("#", "$", "]", "[", "\\", "@"):
+            if char not in special_tokens:
                 if (
-                    next_char in ("#", "$", "]", "[", "\\", "@")
+                    next_char in special_tokens
                     and self.current_token_type.name == "normal_string"
                 ):
                     self.current_token_type = TokenType(1)
@@ -89,8 +91,8 @@ class LocValue:
                 self.current_token += char
                 self.current_token_type = TokenType(8)
 
-        if self.tokens[-1] == self.SPECIAL_TOKEN:
-            self.tokens.append(".")
+        if is_last_char and self.tokens_deque:
+            self.tokens.append(" ".join(self.tokens_deque))
 
     def add_token(self, char):
         self.current_token += char
@@ -101,10 +103,18 @@ class LocValue:
             return
 
         if self.current_token_type.name == "normal_string":
-            self.tokens.append(self.current_token)
+            self.tokens_deque.append(self.current_token)
         else:
-            self.special_tokens.append(self.current_token)
-            self.tokens.append(self.SPECIAL_TOKEN)
+            if self.tokens_deque:
+                self.tokens.append(" ".join(self.tokens_deque))
+                self.tokens_deque.clear()
+            index_in_tokens = len(self.tokens) - 1
+
+            if index_in_tokens in self.special_tokens:
+                self.special_tokens[index_in_tokens].append(self.current_token)
+            else:
+                self.special_tokens[index_in_tokens] = deque(deque([self.current_token]))
+
 
         self.current_token_type = TokenType(1)
         self.current_token = ""
