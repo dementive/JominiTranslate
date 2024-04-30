@@ -89,7 +89,9 @@ class LocValue:
                 self.current_token += char
                 self.current_token_type = TokenType(8)
 
-        if self.tokens[-1] == self.SPECIAL_TOKEN:
+        if len(self.tokens) == len(self.special_tokens):
+            self.tokens.clear()
+        elif self.tokens[-1] == self.SPECIAL_TOKEN:
             self.tokens.append(".")
 
     def add_token(self, char):

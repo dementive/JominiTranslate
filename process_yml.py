@@ -95,9 +95,12 @@ class ProcessYml:
                         f"Translating line {color}{line_num+1}\033[0m/{color}{total_lines}\033[0m"
                     )
                     tokens = file_dict[i][x].tokens
+                    special_tokens = file_dict[i][x].special_tokens
                     if len(tokens) != 0:
                         translations = self.do_translation(tokens)
                         lines.append(self.post_process_translations(translations, file_dict[i][x], x))
+                    elif len(special_tokens) != 0:
+                        lines.append(f' {x}: "{" ".join(special_tokens).replace(" #!", "#!")}"\n')
                     else:
                         lines.append(f' {x}: ""\n')
                 with open(dirpath, "w", encoding="utf-8-sig") as file:
